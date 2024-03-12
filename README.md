@@ -1,1 +1,1 @@
-# zero-true-examples
+# Example applications built with Zero-True
