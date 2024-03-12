@@ -1,0 +1,53 @@
+notebookId = "02cb91e6-ed72-4adc-b107-da9b94033a2d"
+notebookName = "Zero True"
+
+[cells.54dc780e-e570-471c-8628-984152569655]
+cellName = ""
+cellType = "code"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+import zero_true as zt
+
+image = zt.Image(id='image', src='https://www.escapemotions.com/images/mainpage/images/blog_posts_bg/landing-page_blog_93303113643.jpg', width=500, height=300)
+slider = zt.Slider(id='slider', label='slider')
+slider2 = zt.Slider(id='slider2', label='slider2')
+slider3 = zt.Slider(id='slider3', label='slider3')
+slider4 = zt.Slider(id='slider4', label='slider4')
+slider5 = zt.Slider(id='slider5', label='slider5')
+button = zt.Button(id='button', text='button')
+button2 = zt.Button(id='button2', text='button2')
+button3 = zt.Button(id='button3', text='button3')
+button4 = zt.Button(id='button4', text='button4')
+button5 = zt.Button(id='button5', text='button5')
+
+col = zt.Column(components=['slider', 'button'])
+col2 = zt.Column(components=['slider4', 'button4'])
+row2 = zt.Row(components=['slider3', 'button3', col2])
+row = zt.Row(components=['image', 'slider2', 'button2', col])
+
+zt.Layout([row, row2])"""
+
+[cells.60a28953-b971-42a6-af0b-307951e5bbe6]
+cellName = ""
+cellType = "code"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+import pandas as pd
+import plotly.express as px
+
+table_MN = pd.read_html('https://en.wikipedia.org/wiki/Minnesota')
+plot = table_MN[6]
+plot['Country'] = plot['Country'].str.replace(r"\[.*\]", "", regex=True)
+zt.DataFrame.from_dataframe(plot, 'dataframe')
+
+fig = px.bar(plot, x='Country', y='Population')
+zt.PlotlyComponent.from_figure(id='plot',figure=fig)"""
+
