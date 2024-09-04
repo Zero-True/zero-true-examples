@@ -1,0 +1,1228 @@
+notebookId = "f8f987ef-740b-4c45-b547-418061d4a29f"
+notebookName = "Zero True"
+
+[cells.1419a7dd-93f9-48fd-bd1c-215471063143]
+cellName = ""
+cellType = "markdown"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+## Analysis of Olympic Summer & Winter Games, 1896-2022
+- The [dataset on the Olympic Games](https://www.kaggle.com/datasets/piterfm/olympic-games-medals-19862018) includes all the Games from Athens 1896 to Beijing 2022. The dataset includes results, medals, athletes, and hosts.
+- The [dataset for population of countries](https://data.worldbank.org/indicator/SP.POP.TOTL) contains information fo the populaiton of the countries from 1960-2023. 
+
+
+These datasets will be used to compare and analyse the medals tally by country, athletes in this notebook."""
+
+[cells.34ecb947-55c9-4602-9062-2bf3dba7d46e]
+cellName = ""
+cellType = "sql"
+hideCell = "True"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+CREATE OR REPLACE TABLE olympics_filtered AS
+SELECT 
+    r.discipline_title,
+    r.event_title,
+    r.slug_game,
+    h.game_season, -- Add game_season from olympic_hosts.csv
+    r.participant_type,
+    r.medal_type,
+    r.athletes,
+    r.rank_equal,
+    r.rank_position,
+    r.country_name,
+    r.country_code,
+    r.country_3_letter_code,
+    r.athlete_url,
+    r.athlete_full_name,
+    r.value_unit,
+    r.value_type,
+    h.game_year  as event_year -- Convert date field if needed
+FROM 
+    'olympic_results.csv' r
+JOIN 
+    'olympic_hosts.csv' h
+ON 
+    r.slug_game = h.game_slug
+WHERE 
+    r.event_title IS NOT NULL 
+    AND r.event_title != '' 
+    AND r.discipline_title IS NOT NULL
+    AND r.rank_position IS NOT NULL;
+
+"""
+
+[cells.acaeb8da-f083-418c-be42-59d92db53f2a]
+cellName = ""
+cellType = "sql"
+hideCell = "True"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+
+UPDATE olympics_filtered
+SET country_name = 'Kyrgyz Republic'
+WHERE country_name =  'Kyrgyzstan';
+"""
+
+[cells.0fdf5463-7c22-49d3-9e29-aebfeb921844]
+cellName = ""
+cellType = "sql"
+hideCell = "True"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+UPDATE olympics_filtered
+SET country_name = 'United Kingdom'
+WHERE country_name ='Great Britain';
+"""
+
+[cells.c30504a3-84dd-44ab-8800-764efc42049d]
+cellName = ""
+cellType = "sql"
+hideCell = "True"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+UPDATE olympics_filtered
+SET country_name = 'Russia'
+WHERE country_name IN ('Olympic Athletes from Russia', 'Russian Federation');
+"""
+
+[cells.09cdee40-c597-4d86-b014-dc0e0bde866c]
+cellName = ""
+cellType = "sql"
+hideCell = "True"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+UPDATE olympics_filtered
+SET country_name = 'China'
+WHERE country_name IN ('ROC', 'People''s Republic of China');"""
+
+[cells.cbe647be-0229-4455-acf6-d779d67fe335]
+cellName = ""
+cellType = "sql"
+hideCell = "True"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+variable_name = "distinct_year_df"
+code = """
+SELECT DISTINCT event_year
+FROM 
+    olympics_filtered
+WHERE
+    medal_type IS NOT NULL
+ORDER BY event_year;
+"""
+
+[cells.f738d3fe-9c1d-4ce6-8323-dbf22030aab3]
+cellName = ""
+cellType = "code"
+hideCell = "True"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+
+import numpy as np
+event_year_array = distinct_year_df['event_year'].to_numpy()
+
+print(event_year_array)
+"""
+
+[cells.01f09e7c-0f8b-4c6a-9e62-43ed77ff5f97]
+cellName = ""
+cellType = "sql"
+hideCell = "True"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+variable_name = "df_olympic_countries"
+code = """
+SELECT DISTINCT country_name
+FROM 
+    olympics_filtered
+WHERE
+    medal_type IS NOT NULL 
+    AND event_year  >=1960
+ORDER BY country_name;
+"""
+
+[cells.a0c3a4d7-9227-49de-aca2-4ddbef7f5a98]
+cellName = ""
+cellType = "code"
+hideCell = "True"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+import numpy as np
+olympic_countries = df_olympic_countries['country_name'].to_numpy()
+print(olympic_countries)
+"""
+
+[cells.9b865883-86d9-4241-99b4-6902cda3be61]
+cellName = ""
+cellType = "code"
+hideCell = "True"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+import pandas as pd
+
+# Load the CSV file into a DataFrame
+# Replace 'your_file.csv' with the path to your CSV file
+df = pd.read_csv('API_SP.POP.TOTL_DS2_en_csv_v2_2788888.csv')
+
+# Extract the "Country Name" column
+country_names = df['Country Name']
+
+# Display the unique country names
+unique_country_names = country_names.unique()
+
+print(unique_country_names)
+
+"""
+
+[cells.5f73d0f7-f031-4785-bd42-356a04cdd2a5]
+cellName = ""
+cellType = "markdown"
+hideCell = "True"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+### Getting names of the countries which are present in Olympic Dataset but not in Country Population tally dataset."""
+
+[cells.2cbcf714-9580-499f-a02a-936edfb4653b]
+cellName = ""
+cellType = "code"
+hideCell = "True"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+set_unique_country_names = set(unique_country_names)
+set_olympic_countries = set(olympic_countries)
+
+# Find countries in olympic_countries that are not in unique_country_names
+non_matching_countries = set_olympic_countries - set_unique_country_names
+
+# Convert the result back to a list (optional)
+non_matching_countries_list = list(non_matching_countries)
+non_matching_countries_list.sort()
+
+# Print the non-matching countries
+print(non_matching_countries_list)
+"""
+
+[cells.1cda1bce-cc8b-4d21-899b-3bad638c1795]
+cellName = ""
+cellType = "markdown"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+## Step 1 : Visualizing Total Medals for Summer and Winter Olympics by Country"""
+
+[cells.80cb6484-b03d-4d33-b008-4f24be3b9f88]
+cellName = ""
+cellType = "sql"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "True"
+nonReactive = "False"
+variable_name = "df_medals_agg"
+code = """
+SELECT 
+    event_year,
+    country_name,
+    COUNT(medal_type) AS medal_count
+FROM 
+    olympics_filtered
+WHERE
+    medal_type IS NOT NULL -- Ensure only records with medals are counted
+GROUP BY 
+    event_year,
+    country_name
+ORDER BY 
+    event_year,
+    medal_count DESC;
+"""
+
+[cells.46ec33dc-df6f-4a55-aa30-9f0dff9f03d0]
+cellName = ""
+cellType = "code"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+import pandas as pd
+import geopandas as gpd
+import plotly.graph_objects as go
+
+# Aggregate medal counts by country
+df_aggregated = df_medals_agg.groupby('country_name', as_index=False)['medal_count'].sum()
+# print(df_aggregated.head())
+
+# Prepare data for Plotly
+olympic_medals_fig = go.Figure(go.Choropleth(
+    locations=df_aggregated['country_name'],  # Country names
+    locationmode='country names',
+    z=df_aggregated['medal_count'],  # Color by medal count
+    colorscale='OrRd',
+    colorbar_title="Total Medal Count",
+    marker_line_color='white'  # Country boundaries
+))
+
+# Update layout for title and geography
+olympic_medals_fig.update_layout(
+    title_text='Total Olympic Medal Counts by Country',
+    geo=dict(
+        showframe=False,
+        showcoastlines=False,
+        projection_type='equirectangular'
+    )
+)
+zt.PlotlyComponent.from_figure(id='plotly1', figure=olympic_medals_fig)
+"""
+
+[cells.7a4d38e4-5a5e-404c-b8b6-5dcc041741a4]
+cellName = ""
+cellType = "code"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+import pandas as pd
+
+# Load the CSV file into a pandas DataFrame
+df_country_agg = pd.read_csv('API_SP.POP.TOTL_DS2_en_csv_v2_2788888.csv')  # Replace 'your_file_name.csv' with the actual file path
+
+# Melt the DataFrame to convert it into the desired format
+df_melted = df_country_agg.melt(id_vars=["Country Name", "Country Code", "Indicator Name", "Indicator Code"], 
+                    var_name="event_year", 
+                    value_name="population")
+
+# Drop unnecessary columns
+df_country_details = df_melted.drop(columns=["Indicator Name", "Indicator Code"])
+
+# Display the resulting DataFrame
+print(df_country_details)
+"""
+
+[cells.97350ab2-f657-46cc-ab34-2291b6554348]
+cellName = ""
+cellType = "sql"
+hideCell = "True"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+CREATE OR REPLACE TABLE country_details AS
+SELECT  
+  "Country Name" AS country_name, 
+  "Country Code" AS country_code,
+  event_year,
+  population
+from df_country_details;
+"""
+
+[cells.75992674-f82b-4c4c-a34f-0323a3ae3e93]
+cellName = ""
+cellType = "markdown"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+## Step 2: Visualizing Medals per Capita for Continents 
+
+- Calculate the medals/population of the Country. Scale the values between the range of 1 - 100.
+- Scatter plot is created for the selected Continent based on the value of medals_per_capita.
+- The range of years is 1960-2022 because that is the common year range between the dataset for olympics and country population."""
+
+[cells.799cd646-e7f9-40a4-81ca-5f959208853d]
+cellName = ""
+cellType = "sql"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "True"
+nonReactive = "False"
+variable_name = "df_medal_pop"
+code = """
+WITH olympics_table AS (
+    SELECT 
+        event_year,
+        country_name,
+        game_season,
+        COUNT(medal_type) AS medal_count
+    FROM 
+        olympics_filtered
+    WHERE
+        medal_type IS NOT NULL
+    GROUP BY 
+        event_year,
+        country_name,
+        game_season
+    ORDER BY 
+        event_year,
+        medal_count DESC
+)
+
+SELECT 
+    o.event_year,
+    o.game_season,
+    o.country_name,
+    o.medal_count,
+    c.population,
+    (o.medal_count / c.population) AS medals_per_capita
+FROM 
+    olympics_table o
+INNER JOIN 
+    country_details c
+ON 
+    o.country_name = c.country_name
+AND 
+    o.event_year = c.event_year
+ORDER BY 
+    o.event_year,
+    o.medal_count DESC;
+"""
+
+[cells.ad96dff3-cd28-4f68-848f-28a688bfe032]
+cellName = ""
+cellType = "code"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+country_coords = {
+    'Afghanistan': (33.9391, 67.7100),
+    'Algeria': (28.0339, 1.6596),
+    'Argentina': (38.4161, -63.6167),
+    'Armenia': (40.0691, 45.0382),
+    'Australia': (-25.2744, 133.7751),
+    'Austria': (47.5162, 14.5501),
+    'Azerbaijan': (40.1431, 47.5769),
+    'Bahamas': (25.0343, -77.3963),
+    'Bahrain': (26.0667, 50.5577),
+    'Barbados': (13.1939, -59.5432),
+    'Belarus': (53.7098, 27.9534),
+    'Belgium': (50.8503, 4.3517),
+    'Bermuda': (32.3078, -64.7505),
+    'Botswana': (-22.3285, 24.6849),
+    'Brazil': (-14.2350, -51.9253),
+    'Bulgaria': (42.7339, 25.4858),
+    'Burkina Faso': (12.2383, -1.5616),
+    'Burundi': (-3.3731, 29.9189),
+    'Cameroon': (3.8480, 11.5021),
+    'Canada': (56.1304, -106.3468),
+    'Chile': (-35.6751, -71.5430),
+    'Chinese Taipei': (23.6978, 120.9605),
+    'Colombia': (4.5709, -74.2973),
+    'Costa Rica': (9.7489, -83.7534),
+    'Croatia': (45.1000, 15.2000),
+    'Cuba': (21.5218, -77.7812),
+    'Cyprus': (35.1264, 33.4299),
+    'Czech Republic': (49.8175, 15.4730),
+    'Czechoslovakia': (49.8175, 15.4730),  # Same coordinates as the Czech Republic
+    "CÃÂ´te d'Ivoire": (7.539989, -5.547080),
+    "Democratic People's Republic of Korea": (40.3399, 127.5101),
+    'Denmark': (56.2639, 9.5018),
+    'Djibouti': (11.8251, 42.5903),
+    'Dominican Republic': (18.7357, -70.1627),
+    'Ecuador': (-1.8312, -78.1834),
+    'Egypt': (26.8206, 30.8025),
+    'Eritrea': (15.1794, 39.7823),
+    'Estonia': (58.5953, 25.0136),
+    'Ethiopia': (9.1450, 40.4897),
+    'Federal Republic of Germany': (51.1657, 10.4515),
+    'Fiji': (-17.7134, 178.0650),
+    'Finland': (61.9241, 25.7482),
+    'France': (46.6034, 1.8883),
+    'Gabon': (0.8037, 11.6094),
+    'Georgia': (42.3154, 43.3569),
+    'German Democratic Republic (Germany)': (51.1657, 10.4515),
+    'Germany': (51.1657, 10.4515),
+    'Ghana': (7.9465, -1.0232),
+    'Greece': (39.0742, 21.8243),
+    'Grenada': (12.1165, -61.6790),
+    'Guatemala': (15.7835, -90.2308),
+    'Guyana': (4.8604, -58.9302),
+    'Hong Kong, China': (22.3964, 114.1095),
+    'Hungary': (47.1625, 19.5033),
+    'Iceland': (64.9631, -19.0208),
+    'Independent Olympic Athletes': (0.0000, 0.0000),  # Placeholder coordinates
+    'India': (20.5937, 78.9629),
+    'Indonesia': (-0.7893, 113.9213),
+    'Iraq': (33.2232, 43.6793),
+    'Ireland': (53.1424, -7.6921),
+    'Islamic Republic of Iran': (32.4279, 53.6880),
+    'Israel': (31.0461, 34.8516),
+    'Italy': (41.8719, 12.5674),
+    'Ivory Coast': (7.539989, -5.547080),
+    'Jamaica': (18.1096, -77.2975),
+    'Japan': (36.2048, 138.2529),
+    'Jordan': (30.5852, 36.2384),
+    'Kazakhstan': (48.0196, 66.9237),
+    'Kenya': (-1.2921, 36.8219),
+    'Kosovo': (42.6026, 20.9020),
+    'Kuwait': (29.3117, 47.4818),
+    'Kyrgyz Republic': (41.2044, 74.7661),
+    'Latvia': (56.8796, 24.6032),
+    'Lebanon': (33.8547, 35.8623),
+    'Liechtenstein': (47.1660, 9.5554),
+    'Lithuania': (55.1694, 23.8813),
+    'Luxembourg': (49.8153, 6.1296),
+    'Malaysia': (4.2105, 101.9758),
+    'Mauritius': (-20.3484, 57.5522),
+    'Mexico': (23.6345, -102.5528),
+    'Mongolia': (46.8625, 103.8467),
+    'Montenegro': (42.7087, 19.3744),
+    'Morocco': (31.7917, -7.0926),
+    'Mozambique': (-18.6657, 35.5296),
+    'Namibia': (-22.9576, 18.4904),
+    'Netherlands': (52.1326, 5.2913),
+    'Netherlands Antilles': (12.2260, -69.0601),
+    'New Zealand': (-40.9006, 174.8860),
+    'Niger': (17.6078, 8.0817),
+    'Nigeria': (9.0820, 8.6753),
+    'North Macedonia': (41.6086, 21.7453),
+    'Norway': (60.4720, 8.4689),
+    'Pakistan': (30.3753, 69.3451),
+    'Panama': (8.537981, -80.7821),
+    'Paraguay': (-23.4425, -58.4438),
+    "China": (35.8617, 104.1954),
+    'Peru': (-9.189967, -75.0152),
+    'Philippines': (12.8797, 121.7740),
+    'Poland': (51.9194, 19.1451),
+    'Portugal': (39.3999, -8.2245),
+    'Puerto Rico': (18.2208, -66.5901),
+    'Qatar': (25.3548, 51.1839),
+    'ROC': (0.0000, 0.0000),  # Placeholder coordinates
+    'Republic of Korea': (35.9078, 127.7669),
+    'Republic of Moldova': (47.4116, 28.3699),
+    'Romania': (45.9432, 24.9668),
+    'Russia': (55.7826, 45.0453),
+    'Samoa': (-13.7590, -172.1046),
+    'San Marino': (43.9424, 12.4578),
+    'Saudi Arabia': (23.8859, 45.0792),
+    'Senegal': (14.4974, -14.4524),
+    'Serbia': (44.0165, 21.0059),
+    'Serbia and Montenegro': (44.0165, 21.0059),  # Same as Serbia
+    'Singapore': (1.3521, 103.8198),
+    'Slovakia': (48.6690, 19.6990),
+    'Slovenia': (46.1512, 14.9955),
+    'South Africa': (-30.5595, 22.9375),
+    'Soviet Union': (55.751244, 37.618423),  # Moscow coordinates as a reference
+    'Spain': (40.4637, -3.7492),
+    'Sri Lanka': (7.8731, 80.7718),
+    'Sudan': (12.8628, 30.2176),
+    'Suriname': (3.9193, -56.0278),
+    'Sweden': (60.1282, 18.6435),
+    'Switzerland': (46.8182, 8.2275),
+    'Syrian Arab Republic': (34.8021, 38.9968),
+    'Tajikistan': (38.8610, 71.2761),
+    'Thailand': (15.8700, 100.9925),
+    'The Former Yugoslav Republic of Macedonia': (41.6086, 21.7453),  # Same as North Macedonia
+    'Togo': (8.6195, 0.8248),
+    'Tonga': (-21.1790, -175.1982),
+    'Trinidad and Tobago': (10.6918, -61.2225),
+    'Tunisia': (33.8869, 9.5375),
+    'Turkey': (38.9637, 35.2433),
+    'Turkmenistan': (38.9697, 59.5563),
+    'US Virgin Islands': (18.3358, -64.8963),
+    'Uganda': (1.3733, 32.2903),
+    'Ukraine': (48.3794, 31.1656),
+    'Unified Team': (0.0000, 0.0000),  # Placeholder coordinates
+    'United Arab Emirates': (23.4241, 53.8478),
+    'United Arab Republic': (26.8206, 30.8025),  # Same as Egypt
+    'United Kingdom': (55.3781, -3.4360),
+    'United Republic of Tanzania': (-6.3690, 34.8888),
+    'United States of America': (37.0902, -95.7129),
+    'Uruguay': (-32.5228, -55.7658),
+    'Uzbekistan': (41.3775, 64.5853),
+    'Venezuela': (6.4238, -66.5897),
+    'Vietnam': (14.0583, 108.2772),
+    'West Indies Federation': (15.2991, -61.3820),  # Dominica coordinates as a reference
+    'Yugoslavia': (44.0165, 21.0059),  # Same as Serbia
+    'Zambia': (-13.1339, 27.8493),
+    'Zimbabwe': (-19.0154, 29.1549)
+}
+# Define the continent-country mapping including the specific countries
+continent_mapping = {
+    'Africa': [
+        'Algeria', 'Botswana', 'Burkina Faso', 'Burundi', 'Cameroon',
+        "CÃÂ´te d'Ivoire", 'Djibouti', 'Egypt', 'Eritrea', 'Ethiopia',
+        'Gabon', 'Ghana', 'Ivory Coast', 'Kenya', 'Mauritius',
+        'Morocco', 'Mozambique', 'Namibia', 'Niger', 'Nigeria',
+        'Senegal', 'South Africa', 'Sudan', 'United Republic of Tanzania',
+        'Togo', 'Tunisia', 'Uganda', 'Zambia', 'Zimbabwe'
+    ],
+    'Asia': [
+        'Afghanistan', 'Armenia', 'Azerbaijan', 'Bahrain', 'Bangladesh', 'Bhutan', 'Brunei',
+        'China', 'Chinese Taipei', 'Georgia', 'India', 'Indonesia', 'Iran', 'Iraq',
+        'Israel', 'Japan', 'Jordan', 'Kazakhstan', 'Kuwait', 'Kyrgyz Republic', 'Lebanon',
+        'Malaysia', 'Maldives', 'Mongolia', 'Myanmar', 'Nepal', 'North Korea', 'Oman',
+        'Pakistan', 'Palestine', 'Philippines', 'Qatar', 'Saudi Arabia', 'Singapore',
+        'South Korea', 'Sri Lanka', 'Syria', 'Tajikistan', 'Thailand', 'Timor-Leste',
+        'Turkmenistan', 'United Arab Emirates', 'Uzbekistan', 'Vietnam', 'Yemen'
+    ],
+    'Europe': [
+        'Albania', 'Andorra', 'Armenia', 'Austria', 'Azerbaijan', 'Belarus', 'Belgium',
+        'Bosnia and Herzegovina', 'Bulgaria', 'Croatia', 'Cyprus', 'Czech Republic',
+        'Czechoslovakia', 'Denmark', 'Estonia', 'Finland', 'France', 'Germany',
+        'Greece', 'Hungary', 'Iceland', 'Ireland', 'Italy', 'Kosovo', 'Latvia',
+        'Liechtenstein', 'Lithuania', 'Luxembourg', 'Malta', 'Moldova', 'Monaco',
+        'Montenegro', 'Netherlands', 'North Macedonia', 'Norway', 'Poland', 'Portugal',
+        'Romania', 'Russia', 'San Marino', 'Serbia', 'Serbia and Montenegro',
+        'Slovakia', 'Slovenia', 'Spain', 'Sweden', 'Switzerland', 'Ukraine',
+        'United Kingdom', 'Vatican City'
+    ],
+    'North America': [
+        'Antigua and Barbuda', 'Bahamas', 'Barbados', 'Belize', 'Canada', 'Costa Rica',
+        'Cuba', 'Dominica', 'Dominican Republic', 'El Salvador', 'Grenada', 'Guatemala',
+        'Haiti', 'Honduras', 'Jamaica', 'Mexico', 'Nicaragua', 'Panama', 'Saint Kitts and Nevis',
+        'Saint Lucia', 'Saint Vincent and the Grenadines', 'Trinidad and Tobago',
+        'United States of America', 'US Virgin Islands'
+    ],
+    # 'Oceania': [
+    #     'Australia', 'Fiji', 'Kiribati', 'Marshall Islands', 'Micronesia', 'Nauru',
+    #     'New Zealand', 'Palau', 'Papua New Guinea', 'Samoa', 'Solomon Islands',
+    #     'Tonga', 'Tuvalu', 'Vanuatu'
+    # ],
+    'South America': [
+        'Argentina', 'Bolivia', 'Brazil', 'Chile', 'Colombia', 'Ecuador', 'Guyana',
+        'Paraguay', 'Peru', 'Suriname', 'Uruguay', 'Venezuela'
+    ]
+}
+
+# Adding some missing countries based on the provided list
+continent_mapping['Africa'].extend(['Mauritius', 'Gabon', 'Eritrea', 'South Africa', 'Sudan', 'Tanzania', 'Zimbabwe'])
+continent_mapping['Asia'].extend(['Afghanistan', 'Bangladesh', 'Sri Lanka', 'North Korea'])
+continent_mapping['Europe'].extend(['Serbia and Montenegro', 'Russian Federation', 'Germany', 'France'])
+continent_mapping['North America'].extend(['Cuba', 'Puerto Rico', 'Haiti', 'Jamaica'])
+# continent_mapping['Oceania'].extend(['New Zealand', 'Fiji'])
+continent_mapping['South America'].extend(['Guyana', 'Suriname'])
+# Mapping for scope in Plotly based on continent
+continent_scope = {
+    'Africa': 'africa',
+    'Asia': 'asia',
+    'Europe': 'europe',
+    'North America': 'north america',
+    # 'Oceania': 'oceania',
+    'South America': 'south america'
+}
+
+# Create a SelectBox component
+continent_select_box = zt.SelectBox(
+  id="continent_select_box",
+  clearable=True,                      # Determines if the select box has a clearable option
+  color="primary",                     # Color of the select box
+  dense=True,                          # Determines if the select box is dense
+  disabled=False,                      # Determines if the select box is disabled
+  items=list(continent_mapping.keys()),  # Options for the select box
+  label="Choose an option",            # Label for the select box
+  multiple=False,                      # Determines if multiple selections are allowed
+  outlined=True,                       # Determines if the select box has an outlined style
+  readonly=False,                      # Determines if the select box is read-only
+  triggerEvent="update:modelValue",    # Trigger event for when to trigger a run
+  value=None                           # Selected options for the select box
+)
+
+# Assuming you have a mechanism to render or use this SelectBox within a layout
+layout = zt.Layout(components=[continent_select_box])
+"""
+
+[cells.526ba184-e13d-4db9-b274-7a9b49df59a9]
+cellName = ""
+cellType = "code"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+import pandas as pd
+import plotly.express as px
+continent_df = pd.DataFrame([(country, continent) for continent, countries in continent_mapping.items() for country in countries],
+                            columns=['country_name', 'continent'])
+
+# Filter the DataFrame to include only the countries listed in country_coords and exclude unwanted entries
+df_winter = df_medal_pop[(df_medal_pop['game_season'] == 'Winter')]
+df_winter = df_winter[df_winter['country_name'].isin(country_coords.keys())]
+
+# Merge with continent information
+df_winter = df_winter.merge(continent_df, on='country_name', how='left')
+
+# Repeat the process for Summer Olympics data
+df_summer = df_medal_pop[(df_medal_pop['game_season'] == 'Summer')]
+df_summer = df_summer[df_summer['country_name'].isin(country_coords.keys())]
+df_summer = df_summer.merge(continent_df, on='country_name', how='left')
+
+
+def plot_combined_by_continent(selected_continent):
+    # Combine Winter and Summer Olympics data
+    df_combined = pd.concat([df_winter, df_summer], axis=0)
+    
+    # Filter the data by the selected continent
+    df_filtered = df_combined[df_combined['continent'] == selected_continent]
+    
+    # Recalculate the average metrics by country
+    df_avg = df_filtered.groupby(['country_name', 'game_season']).agg({
+        'medal_count': 'mean',
+        'population': 'mean',
+        'medals_per_capita': 'mean'
+    }).reset_index()
+    
+    if df_avg.empty:
+        print("No records for the continent")
+    else:
+        # Now scale the average medals_per_capita for all records at once
+        min_range = 1
+        max_range = 100
+    
+        mean = df_avg['medals_per_capita'].mean()
+        std_dev = df_avg['medals_per_capita'].std()
+    
+        # Standard scaling
+        scaled_values = (df_avg['medals_per_capita'] - mean) / std_dev
+    
+        # Min-Max scaling to the defined range
+        min_scaled = scaled_values.min()
+        max_scaled = scaled_values.max()
+    
+        df_avg['Scaled Value'] = (scaled_values - min_scaled) / (max_scaled - min_scaled) * (max_range - min_range) + min_range
+        
+        # Merge with coordinates
+        df_avg['Latitude'] = df_avg['country_name'].map(lambda country: country_coords.get(country, (0.0, 0.0))[0])
+        df_avg['Longitude'] = df_avg['country_name'].map(lambda country: country_coords.get(country, (0.0, 0.0))[1])
+    
+        # Create separate scatter geo plots for Winter and Summer Olympics
+        for game_season in df_avg['game_season'].unique():
+            df_season = df_avg[df_avg['game_season'] == game_season]
+            
+            fig = px.scatter_geo(df_season, 
+                                 lat='Latitude', 
+                                 lon='Longitude', 
+                                 color='Scaled Value',  # Use scaled value for color intensity
+                                 color_continuous_scale='Viridis',  # Change color scale to 'Viridis' for better contrast
+                                 size='Scaled Value',  # Use average medal count for marker size
+                                 size_max=50,  # Adjust the maximum size of the markers
+                                 opacity=0.7,  # Adjust opacity to create a heatmap-like effect
+                                 projection="natural earth",  # Use natural earth projection
+                                 scope=continent_scope[selected_continent],  # Set the map scope to the selected continent
+                                 hover_name='country_name',
+                                 hover_data={
+                                     'Scaled Value': False, 
+                                     'medal_count': True, 
+                                     'population': True, 
+                                     'medals_per_capita': True,  # Show average medals per capita on hover
+                                     'Latitude': False, 
+                                     'Longitude': False
+                                 },
+                                 title=f"Scaled Average Medals Per Capita in {game_season} Olympics (1960-202) - {selected_continent}"
+                                )
+            fig.update_layout(
+                width=1000,  # Increase width of the map
+                height=800,  # Increase height of the map
+            )
+            
+            # Show the map for each season
+            zt.PlotlyComponent.from_figure(id=f'plotly_{game_season}_{selected_continent}', figure=fig)
+
+if not(continent_select_box and continent_select_box.value):
+    print("Select a continent")
+else:
+    plot_combined_by_continent(continent_select_box.value)
+
+"""
+
+[cells.0b825d9b-ee3c-4a46-ba1e-765a8395c67e]
+cellName = ""
+cellType = "markdown"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+## Step 3: Compare the Countries By their Medal Count
+- Visualize the top countries with the highest medal counts in Summer, Winter and Overall.
+- Visualize the total medals earned in Summer and Winter Olympics for the selected Continent"""
+
+[cells.2c4a0be9-c9e8-4953-a766-fcfe83038b5c]
+cellName = ""
+cellType = "sql"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "True"
+nonReactive = "False"
+variable_name = "medal_tally_df"
+code = """
+SELECT
+    country_name,
+    event_year,
+    game_season,
+    SUM(CASE WHEN medal_type = 'GOLD' THEN 1 ELSE 0 END) AS gold_count,
+    SUM(CASE WHEN medal_type = 'SILVER' THEN 1 ELSE 0 END) AS silver_count,
+    SUM(CASE WHEN medal_type = 'BRONZE' THEN 1 ELSE 0 END) AS bronze_count,
+    COUNT(medal_type) AS total_medals
+FROM
+    olympics_filtered
+WHERE
+    medal_type IN ('GOLD', 'SILVER', 'BRONZE')
+GROUP BY
+    country_name,
+    event_year,
+    game_season
+ORDER BY
+    country_name ASC,
+    event_year ASC;
+"""
+
+[cells.d3b50346-d703-459e-bf83-e0e64f2ab06f]
+cellName = ""
+cellType = "code"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+import pandas as pd
+import plotly.graph_objs as go
+from plotly.subplots import make_subplots
+
+# Filter for Summer, Winter, and Overall Olympics
+df_summer = medal_tally_df[medal_tally_df['game_season'] == "Summer"]
+df_winter = medal_tally_df[medal_tally_df['game_season']== "Winter"]
+df_overall = medal_tally_df.copy()
+
+# Aggregate and sort data for Summer, Winter, and Overall Olympics
+df_summer_agg = df_summer.groupby('country_name').agg({
+    'gold_count': 'sum',
+    'silver_count': 'sum',
+    'bronze_count': 'sum',
+    'total_medals': 'sum'
+}).reset_index().sort_values(by='total_medals', ascending=False).head(5)
+
+df_winter_agg = df_winter.groupby('country_name').agg({
+    'gold_count': 'sum',
+    'silver_count': 'sum',
+    'bronze_count': 'sum',
+    'total_medals': 'sum'
+}).reset_index().sort_values(by='total_medals', ascending=False).head(5)
+
+df_overall_agg = df_overall.groupby('country_name').agg({
+    'gold_count': 'sum',
+    'silver_count': 'sum',
+    'bronze_count': 'sum',
+    'total_medals': 'sum'
+}).reset_index().sort_values(by='total_medals', ascending=False).head(5)
+
+
+# Function to create horizontal medal plots
+def create_medal_plot(df, title):
+    fig = go.Figure()
+
+    # Calculate actual values for hover
+    df['actual_silver'] = df['silver_count']
+    df['actual_bronze'] = df['bronze_count']
+
+    # Add gold bar
+    fig.add_trace(go.Bar(
+        y=df['country_name'],
+        x=df['gold_count'],
+        name='Gold',
+        orientation='h',
+        marker=dict(color='#FFD700'),
+        hovertemplate='Gold: %{x}<extra></extra>'
+    ))
+
+    # Add silver bar
+    fig.add_trace(go.Bar(
+        y=df['country_name'],
+        x=df['silver_count'],
+        name='Silver',
+        orientation='h',
+        marker=dict(color='#C0C0C0'),
+        hovertemplate='Silver: %{customdata}<extra></extra>',
+        base=df['gold_count'],
+        customdata=df['actual_silver']  # Pass actual silver values as custom data
+    ))
+
+    # Add bronze bar
+    fig.add_trace(go.Bar(
+        y=df['country_name'],
+        x=df['bronze_count'],
+        name='Bronze',
+        orientation='h',
+        marker=dict(color='#CD7F32'),
+        hovertemplate='Bronze: %{customdata}<extra></extra>',
+        base=df['gold_count'] + df['silver_count'],
+        customdata=df['actual_bronze']  # Pass actual bronze values as custom data
+    ))
+
+    # Add total as a separate trace (transparent bar to display the total value at the end)
+    fig.add_trace(go.Bar(
+        y=df['country_name'],
+        x=df['total_medals'],
+        name='Total',
+        orientation='h',
+        marker=dict(color='rgba(0,0,0,0)'),  # Transparent bar
+        hoverinfo='skip',
+        text=[f"{val}" for val in df['total_medals']],
+        textposition='outside',  # Place text outside the bars
+        cliponaxis=False  # Allow text to go outside plot area
+    ))
+
+    # Update layout to adjust for spacing and titles
+    fig.update_layout(
+        height=400, 
+        width=1000, 
+        title_text=title, 
+        showlegend=False,
+        barmode='stack',  # Keep bars stacked
+        margin=dict(r=20)  # Adjust right margin to allow space for total text
+    )
+    fig.update_xaxes(title_text="Total Medals")
+    fig.update_yaxes(title_text="Country")
+    
+    return fig
+
+# Create separate figures for Summer, Winter, and Overall Olympics
+fig_summer1 = create_medal_plot(df_summer_agg, "Summer Olympics Medal Counts (1896-2022)")
+fig_winter = create_medal_plot(df_winter_agg, "Winter Olympics Medal Counts (1896-2022)")
+fig_overall = create_medal_plot(df_overall_agg, "Overall Olympics Medal Counts (1896-2022)")
+
+# # Display the plots (integrating with your environment as needed)
+# fig_summer.show()
+# fig_winter.show()
+# fig_overall.show()
+
+# Assuming you're using a custom component in your environment
+# You can wrap these in PlotlyComponent like this:
+sample_matplotlib1 = zt.PlotlyComponent.from_figure(id='fig_summer_medals1', figure=fig_summer1)
+sample_matplotlib2 = zt.PlotlyComponent.from_figure(id='fig_winter_medals', figure=fig_winter)
+sample_matplotlib3 = zt.PlotlyComponent.from_figure(id='fig_overall_medals', figure=fig_overall)
+"""
+
+[cells.2a736a97-0658-4cc5-aacc-5ba0d489435d]
+cellName = ""
+cellType = "code"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+import pandas as pd
+import plotly.graph_objs as go
+
+def plot_medal_count_for_continent(continent_name):
+    # Get the list of countries for the selected continent
+    countries = continent_mapping.get(continent_name, [])
+
+    if not countries:
+        print(f"No countries found for continent: {continent_name}")
+        return None
+    
+    # Filter the DataFrame for the selected continent's countries
+    df_continent = medal_tally_df[medal_tally_df['country_name'].isin(countries)]
+    
+    # Split by Summer and Winter Olympics
+    df_summer_continent = df_continent[df_continent['game_season'] == "Summer"]
+    df_winter_continent = df_continent[df_continent['game_season'] == "Winter"]
+    
+    # Aggregate the medal counts
+    summer_totals_continent = df_summer_continent[['gold_count', 'silver_count', 'bronze_count']].sum()
+    winter_totals_continent = df_winter_continent[['gold_count', 'silver_count', 'bronze_count']].sum()
+    
+    # Prepare data for the bar chart
+    seasons = ['Summer', 'Winter']
+    gold_values = [summer_totals_continent['gold_count'], winter_totals_continent['gold_count']]
+    silver_values = [summer_totals_continent['silver_count'], winter_totals_continent['silver_count']]
+    bronze_values = [summer_totals_continent['bronze_count'], winter_totals_continent['bronze_count']]
+    
+    # Create stacked bar chart
+    fig_continent = go.Figure()
+    
+    # Add the Gold medals to the bar
+    fig_continent.add_trace(go.Bar(
+        x=seasons,
+        y=gold_values,
+        name='Gold',
+        marker_color='#FFD700',
+        text=gold_values,  # Add data labels
+        textposition='inside'
+    ))
+    
+    # Add the Silver medals to the bar
+    fig_continent.add_trace(go.Bar(
+        x=seasons,
+        y=silver_values,
+        name='Silver',
+        marker_color='#C0C0C0',
+        base=gold_values,
+        text=silver_values,  # Add data labels
+        textposition='inside'
+    ))
+    
+    # Add the Bronze medals to the bar
+    fig_continent.add_trace(go.Bar(
+        x=seasons,
+        y=bronze_values,
+        name='Bronze',
+        marker_color='#CD7F32',
+        base=[g + s for g, s in zip(gold_values, silver_values)],
+        text=bronze_values,  # Add data labels
+        textposition='inside'
+    ))
+    
+    # Customize layout
+    fig_continent.update_layout(
+        title=f'Medal Counts for {continent_name}: Summer vs Winter Olympics  (1896-2022)',
+        xaxis_title='Olympic Season',
+        yaxis_title='Number of Medals',
+        barmode='stack',
+        height=600  # Set height for better readability
+    )
+    
+    # Render the Plotly figure as a PlotlyComponent in your environment
+    sample_plotly = zt.PlotlyComponent.from_figure(id=f'fig_{continent_name.lower()}_medals', figure=fig_continent)
+    
+    # Layout definition for rendering
+    layout = zt.Layout(columns=[
+        zt.Column(components=[
+            zt.Row(components=[sample_plotly.id]),
+        ])
+    ])
+    
+    return layout
+
+# Assume `medal_tally_df` is your DataFrame containing the Olympic data.
+# List of African countries
+if not(continent_select_box and continent_select_box.value):
+    print("Select a continent")
+else:
+   layout_africa = plot_medal_count_for_continent(continent_select_box.value)
+"""
+
+[cells.470b6d98-8401-4fd8-aa55-ac15cba7d684]
+cellName = ""
+cellType = "markdown"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+## Step 4: Get the Visualization for Top Medal Counts by Athlete
+- Visualize the top atheeltes with the highest medal counts in Summer, Winter and Overall."""
+
+[cells.770fcb9b-e5a5-4c6f-9d3d-4978ef33ab41]
+cellName = ""
+cellType = "sql"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "True"
+nonReactive = "False"
+variable_name = "athlete_medal_df"
+code = """
+SELECT 
+    athlete_full_name,
+    game_season,
+    country_name,
+    SUM(CASE WHEN medal_type = 'GOLD' THEN 1 ELSE 0 END) AS gold_count,
+    SUM(CASE WHEN medal_type = 'SILVER' THEN 1 ELSE 0 END) AS silver_count,
+    SUM(CASE WHEN medal_type = 'BRONZE' THEN 1 ELSE 0 END) AS bronze_count,
+    COUNT(*) AS total_medals
+FROM 
+    olympics_filtered
+WHERE
+    medal_type IN ('GOLD', 'SILVER', 'BRONZE')
+    and athlete_full_name is NOT NULL
+    and country_name is NOT NULL
+GROUP BY 
+    athlete_full_name,
+    game_season,
+    country_name
+HAVING
+    total_medals > 0;
+"""
+
+[cells.04efa744-2af2-481d-b493-1a2cdc35fbfb]
+cellName = ""
+cellType = "code"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+
+import pandas as pd
+import plotly.graph_objs as go
+import zero_true as zt
+# Filter for Summer, Winter, and Overall Olympics
+df_summer_athelete = athlete_medal_df[athlete_medal_df['game_season'] == "Summer"]
+df_winter_athelete = athlete_medal_df[athlete_medal_df['game_season'] == "Winter"]
+df_overall_athelete = athlete_medal_df.copy()
+
+# Aggregate and sort data for Summer, Winter, and Overall Olympics
+# Group by both athlete_full_name and country_name
+df_summer_athelete_agg = df_summer_athelete.groupby(['athlete_full_name', 'country_name']).agg({
+    'gold_count': 'sum',
+    'silver_count': 'sum',
+    'bronze_count': 'sum',
+    'total_medals': 'sum'
+}).reset_index().sort_values(by=['total_medals', 'gold_count', 'silver_count', 'bronze_count'], ascending=[False, False, False, False]).head(5)
+
+df_winter_athelete_agg = df_winter_athelete.groupby(['athlete_full_name', 'country_name']).agg({
+    'gold_count': 'sum',
+    'silver_count': 'sum',
+    'bronze_count': 'sum',
+    'total_medals': 'sum'
+}).reset_index().sort_values(by=['total_medals', 'gold_count', 'silver_count', 'bronze_count'], ascending=[False, False, False, False]).head(5)
+
+df_overall_athelete_agg = df_overall_athelete.groupby(['athlete_full_name', 'country_name']).agg({
+    'gold_count': 'sum',
+    'silver_count': 'sum',
+    'bronze_count': 'sum',
+    'total_medals': 'sum'
+}).reset_index().sort_values(by=['total_medals', 'gold_count', 'silver_count', 'bronze_count'], ascending=[False, False, False, False]).head(5)
+
+
+# Modify the athlete_full_name to include country_name
+# Modify the athlete_full_name to proper Camel Case and include country_name
+df_summer_athelete_agg['athlete_full_name'] = df_summer_athelete_agg['athlete_full_name'].str.title()
+df_summer_athelete_agg['athlete_label'] = df_summer_athelete_agg['athlete_full_name'] + " (" + df_summer_athelete_agg['country_name'] + ")"
+
+df_winter_athelete_agg['athlete_full_name'] = df_winter_athelete_agg['athlete_full_name'].str.title()
+df_winter_athelete_agg['athlete_label'] = df_winter_athelete_agg['athlete_full_name'] + " (" + df_winter_athelete_agg['country_name'] + ")"
+
+df_overall_athelete_agg['athlete_full_name'] = df_overall_athelete_agg['athlete_full_name'].str.title()
+df_overall_athelete_agg['athlete_label'] = df_overall_athelete_agg['athlete_full_name'] + " (" + df_overall_athelete_agg['country_name'] + ")"
+
+# print(df_summer_athelete_agg)
+# print(df_winter_athelete_agg)
+# print(df_overall_athelete_agg)
+
+def create_medal_plot(df, title):
+    fig_athelete = go.Figure()
+
+    # Add gold bar
+    fig_athelete.add_trace(go.Bar(
+        y=df['athlete_label'],
+        x=df['gold_count'],
+        name='Gold',
+        orientation='h',
+        marker=dict(color='#FFD700'),
+        hovertemplate='Gold: %{x}<extra></extra>'
+    ))
+
+    # Add silver bar
+    fig_athelete.add_trace(go.Bar(
+        y=df['athlete_label'],
+        x=df['silver_count'],
+        name='Silver',
+        orientation='h',
+        marker=dict(color='#C0C0C0'),
+        hovertemplate='Silver: %{customdata}<extra></extra>',
+        base=df['gold_count'],
+        customdata=df['silver_count']  # Pass actual silver values as custom data
+    ))
+
+    # Add bronze bar
+    fig_athelete.add_trace(go.Bar(
+        y=df['athlete_label'],
+        x=df['bronze_count'],
+        name='Bronze',
+        orientation='h',
+        marker=dict(color='#CD7F32'),
+        hovertemplate='Bronze: %{customdata}<extra></extra>',
+        base=df['gold_count'] + df['silver_count'],
+        customdata=df['bronze_count']  # Pass actual bronze values as custom data
+    ))
+
+    # Add total as a separate trace (transparent bar to display the total value at the end)
+    fig_athelete.add_trace(go.Bar(
+        y=df['athlete_label'],
+        x=df['total_medals'],
+        name='Total',
+        orientation='h',
+        marker=dict(color='rgba(0,0,0,0)'),  # Transparent bar
+        hoverinfo='skip',
+        text=[f"{val}" for val in df['total_medals']],
+        textposition='outside',  # Place text outside the bars
+        cliponaxis=False  # Allow text to go outside plot area
+    ))
+
+    # Update layout to adjust for spacing and titles
+    fig_athelete.update_layout(
+        height=400, 
+        width=1000, 
+        title_text=title, 
+        showlegend=False,
+        barmode='stack',  # Keep bars stacked
+        margin=dict(r=20)  # Adjust right margin to allow space for total text
+    )
+    fig_athelete.update_xaxes(title_text="Total Medals")
+    fig_athelete.update_yaxes(title_text="Athlete")
+    
+    return fig_athelete
+
+# Create separate figures for Summer, Winter, and Overall Olympics
+fig_summer_athelete = create_medal_plot(df_summer_athelete_agg, "Top 5 Athletes - Summer Olympics (1896-2022)")
+fig_winter_athelete = create_medal_plot(df_winter_athelete_agg, "Top 5 Athletes - Winter Olympics (1896-2022)")
+fig_overall_athelete = create_medal_plot(df_overall_athelete_agg, "Top 5 Athletes - Summer and Winter Olympics (1896-2022)")
+
+# Wrap these in PlotlyComponent as per your environment
+sample_matplotlib__athelete_summer = zt.PlotlyComponent.from_figure(id='fig_summer_athelete_medals', figure=fig_summer_athelete)
+sample_matplotlib_athelete_winter = zt.PlotlyComponent.from_figure(id='fig_winter_athelete_medals', figure=fig_winter_athelete)
+sample_matplotlib__athelete_overall = zt.PlotlyComponent.from_figure(id='fig_overall_athelete_medals', figure=fig_overall_athelete)
+
+
+"""
+

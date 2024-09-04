@@ -1,0 +1,665 @@
+notebookId = "3748c3f3-7fc3-461e-ad87-05e0da83ddd1"
+notebookName = "Zero True"
+
+[cells.54fd448f-9a21-48f2-a743-0c7bec8183bd]
+cellName = ""
+cellType = "markdown"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+# Netflix Movies and TV Shows
+Listings of movies and tv shows on Netflix - Regularly Updated.
+
+This tabular dataset consists of listings of all the movies and tv shows available on Netflix, along with details such as:
+* show_id: Unique ID for every Movie / Tv Show
+* type: Identifier - A Movie or TV Show
+* title: Title of the Movie / Tv Show
+* director: Director of the Movie
+* cast: Actors involved in the movie / show
+* country: Country where the movie / show was produced
+* date_added: Date it was added on Netflix
+* release_year: Actual Release year of the move / show
+* rating: TV Rating of the movie / show
+* duration: Total Duration - in minutes or number of seasons"""
+
+[cells.3124d71b-a19f-4078-9352-e9d4727f2d57]
+cellName = ""
+cellType = "code"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+import os
+import json
+with open(r'kaggle.json') as f:
+    kaggle_credentials = json.load(f)
+os.environ['KAGGLE_USERNAME'] = kaggle_credentials['username']
+os.environ['KAGGLE_KEY'] = kaggle_credentials['key']
+
+from kaggle.api.kaggle_api_extended import KaggleApi
+
+def download_kaggle_dataset(dataset, download_path):
+    # Initialize Kaggle API
+    api = KaggleApi()
+    api.authenticate()
+
+    if not os.path.exists(download_path):
+        os.makedirs(download_path)
+
+    api.dataset_download_files(dataset, path=download_path, unzip=True)
+
+kaggle_dataset = 'shivamb/netflix-shows'  # Replace with the actual dataset path on Kaggle
+download_folder = './netflix-shows'  # Replace with your desired download folder path
+
+download_kaggle_dataset(kaggle_dataset, download_folder)
+print(f"Dataset downloaded and extracted to {download_folder}")"""
+
+[cells.c6a83197-c620-4f6f-966f-3e0ec1c4bcb3]
+cellName = ""
+cellType = "code"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+import os
+
+download_folder = './netflix-shows'
+
+files = os.listdir(download_folder)
+print("Files in the folder:")
+for file in files:
+    print(file)"""
+
+[cells.0f28faa9-5993-4343-b734-de5cce1eb469]
+cellName = ""
+cellType = "sql"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "True"
+nonReactive = "False"
+code = """
+SELECT * FROM 'netflix-shows/netflix_titles.csv';"""
+
+[cells.d98ef577-f1ad-435a-9f7d-3c5a908b2817]
+cellName = ""
+cellType = "markdown"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+## Part 1: Analysing The Movies/TV Shows Over the years
+This includes the following:
+* Analyzing the duration of the shows.
+* Analyzing the count of movies over countries as per release date"""
+
+[cells.a7ffd4e7-96d2-40fd-a0a3-0dc50ea39016]
+cellName = "Select Country"
+cellType = "code"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+import pandas as pd 
+import zero_true as zt
+
+df = pd.read_csv('netflix-shows/netflix_titles.csv')
+def process_countries(countries):
+    processed_countries = []
+    for country in countries:
+        if isinstance(country, str):
+            processed_countries.extend(country.split(','))
+        else:
+            processed_countries.append(country)
+    return list(set(processed_countries))
+
+countries = process_countries(df['country'].dropna().unique().tolist())
+countries = list({country.strip() for country in countries if country.strip()})
+
+countries.sort()
+# print(len(countries))
+country = zt.Autocomplete(id = 'country', items = countries, label = 'Select Country')"""
+
+[cells.4838ff8e-d590-4b3a-beb7-23fc48b4c280]
+cellName = ""
+cellType = "code"
+hideCell = "True"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+# print(country.value)
+selected_country = country.value
+# print(selected_country)"""
+
+[cells.fc6865d3-c662-4182-bf0f-21d7404f90db]
+cellName = ""
+cellType = "sql"
+hideCell = "True"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+SELECT *
+FROM 'netflix-shows/netflix_titles.csv'
+WHERE country LIKE '%'||{selected_country}||'%'
+LIMIT 1;"""
+
+[cells.53fe3d37-0f99-46cd-913c-cded8a2a4e55]
+cellName = ""
+cellType = "sql"
+hideCell = "True"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+CREATE TABLE IF NOT EXISTS netflix_data AS
+SELECT * FROM 'netflix-shows/netflix_titles.csv';"""
+
+[cells.afe1e985-1914-4155-97fc-aa039109a772]
+cellName = ""
+cellType = "sql"
+hideCell = "True"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+SELECT * FROM netflix_data LIMIT 5;"""
+
+[cells.7c69c789-8c50-4dcb-8eec-c132211b3cfe]
+cellName = "Connecting the database"
+cellType = "code"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+import duckdb 
+
+conn = duckdb.connect('zt_db.db')
+
+# release_yr = [release_year[0] for release_year in conn.execute("SELECT DISTINCT release_year FROM netflix_data ORDER BY release_year").fetchall() if release_year[0] is not None]
+
+# print(release_yr)"""
+
+[cells.720d621c-6458-443a-99c7-3f77551cad0e]
+cellName = ""
+cellType = "code"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+query = f'''
+SELECT Distinct release_year FROM netflix_data
+WHERE country LIKE '%{selected_country}%' ORDER BY release_year
+'''
+if not(selected_country and len(selected_country)>0):
+    print("To get the range for release year, please select Country")
+else:
+    result = conn.execute(query).fetchall()
+    
+    import pandas as pd
+    df = pd.DataFrame(result, columns=[desc[0] for desc in conn.description])
+    # print(df)
+    release_year = df['release_year'].dropna().tolist()
+    
+    # print(release_yr)
+    release_year_slider = zt.RangeSlider(id='release_year',min=min(release_year),
+                                                           max=max(release_year),
+                                                           step=10, 
+                                                          label='Select Range for Release year',
+                                                            value = [min(release_year), max(release_year)]
+                                                )"""
+
+[cells.84501984-ab54-4f9a-ac9b-4380407a1235]
+cellName = ""
+cellType = "code"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+query = f'''
+SELECT Distinct type FROM netflix_data;
+'''
+
+result = conn.execute(query).fetchall()
+
+import pandas as pd
+df = pd.DataFrame(result, columns=[desc[0] for desc in conn.description])
+# print(df)
+type_list = df['type'].dropna().tolist()
+
+# print(release_yr)
+show_type = zt.SelectBox(id='show_type', items = type_list, label = 'Select Type of Show')
+selected_show_type = show_type.value"""
+
+[cells.24e07a86-5386-4a7d-8a82-7449358d3684]
+cellName = ""
+cellType = "sql"
+hideCell = "True"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+SELECT * FROM netflix_data
+WHERE country LIKE '%'||{selected_country}||'%'
+AND release_year BETWEEN {release_year_slider.value[0]} AND {release_year_slider.value[1]} 
+AND type In ({selected_show_type})"""
+
+[cells.52dea260-53d2-499e-9341-cf0afad7ec70]
+cellName = ""
+cellType = "markdown"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+_Note_ : 
+* For Movies, the duration is in Minutes. So, a line plot would be beneficial
+* For TV Shows, the duration is in Seasons, hence a scatter plot would be beneficial as only one/two movies would have many seasons at a time. '''
+"""
+
+[cells.2c5e0321-55d8-4b45-8d74-7dc1225d2b69]
+cellName = ""
+cellType = "code"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+import plotly.express as px
+from zero_true import state, PlotlyComponent, Button, Layout, Row
+if not(selected_country and selected_show_type and len(selected_country)>0 and len(selected_show_type)>0):
+    print("Please select Country, Range for release year and Show Type")
+else:
+    query = f'''
+    SELECT release_year, duration FROM netflix_data
+    WHERE country LIKE '%{selected_country}%'
+    AND release_year BETWEEN {release_year_slider.value[0]} AND {release_year_slider.value[1]}
+    AND type In ('{selected_show_type}')
+    ORDER BY release_year;
+    '''
+
+    result = conn.execute(query).fetchall()
+    
+    import pandas as pd
+    df = pd.DataFrame(result, columns=[desc[0] for desc in conn.description])
+    # print(df)
+    if selected_show_type == "Movie":
+        df['duration_min'] = df['duration'].str.extract('(\d+)').fillna(0).astype(int)
+        df = df[df['duration_min'] != 0]
+        # Calculate the average duration by release year
+        df_grouped = df.groupby('release_year')['duration_min'].mean().reset_index()
+        
+        # Create the line plot
+        fig = px.line(df_grouped, x='release_year', y='duration_min',
+                      labels={'release_year': 'Release Year', 'duration_min': 'Average Duration (min)'},
+                      title='Average Duration of Movies by Release Year',
+                      markers=True
+                     )
+        
+        # Show the plot
+        PlotlyComponent.from_figure(id='plot_duration_releaseyr', figure=fig)
+    else: # it is a TV show
+        df['seasons'] = df['duration'].str.extract('(\d+)').fillna(0).astype(int)
+        df = df[df['seasons'] != 0]
+        # Grouping and counting
+        df_grouped = df.groupby(['release_year', 'seasons']).size().reset_index(name='count')
+    
+        # Create the area plot
+        fig = px.scatter(df_grouped, x='release_year', y='count', color='seasons',
+                      labels={'release_year': 'Release Year', 'count': 'Number of Shows'},
+                      title='Number of Seasons per Release Year')
+        
+        # Show the plot
+        PlotlyComponent.from_figure(id='plot_seasons_releaseyr', figure=fig)"""
+
+[cells.f8216f46-52e2-4f20-b480-af3bf7f788b9]
+cellName = ""
+cellType = "code"
+hideCell = "True"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+if not(selected_country and selected_show_type and len(selected_country)>0 and len(selected_show_type)>0):
+    print("Please select Country, Range for release year and Show Type")
+else:
+    query = f'''
+    SELECT * FROM netflix_data
+    WHERE country LIKE '%{selected_country}%'
+    AND release_year BETWEEN {release_year_slider.value[0]} AND {release_year_slider.value[1]}
+    AND type In ('{selected_show_type}')
+    '''
+    
+    result = conn.execute(query).fetchall()
+    
+    import pandas as pd
+    df = pd.DataFrame(result, columns=[desc[0] for desc in conn.description])
+    print(df)
+    print(conn.description)"""
+
+[cells.1d943a48-7218-489f-8f77-664808011050]
+cellName = ""
+cellType = "markdown"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+* Based on the filters, the plot will be generated for the Count of shows Based on Rating, Release year for the selected Country and range of Release year.
+* Users can add the plots for comparison. Only 2 search results are allowed to be compared.
+* In case of adding a new third search result for comparison, the oldest result gets deleted."""
+
+[cells.2ef228f0-90b0-42c2-862c-11bb07052be6]
+cellName = ""
+cellType = "code"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+import plotly.express as px
+from zero_true import state, PlotlyComponent, Button, Layout, Row
+if not(selected_country and selected_show_type and len(selected_country)>0 and len(selected_show_type)>0):
+    print("Please select Country, Range for release year and Show Type")
+else:
+    # Grouping and creating the plot
+    df_grouped = df.groupby(['release_year', 'rating']).size().reset_index(name='count')
+    figure1 = px.bar(df_grouped, x='release_year', y='count', color='rating', 
+                 labels={'release_year': 'Release Year', 'count': 'Number of Shows'},
+                 title=f'Number of {selected_show_type}s for {selected_country} by Release Year ({release_year_slider.value[0]} - {release_year_slider.value[1]}) and Rating')
+    
+    # Initializing the state
+    state = state()
+    if "list" not in state:
+        state["list"] = []
+    
+    # Checking if the current figure is already in the state list
+    fig_exists = any(item.layout.title.text == figure1.layout.title.text for item in state["list"])
+    clear_btn = Button(id='clear_btn', text='Clear Comparison')
+    show_btn = Button(id='show_btn', text='Compare last 2 Elements Added for comparison')
+    update_btn = Button(id='update_btn', text ="Add to Compare")
+    
+    def update_buttons(fig_exists):
+        global layout, add_btn, rm_btn, clear_btn, show_btn
+        # print("In update_buttons",fig_exists)
+        if fig_exists:
+            update_btn.text = "Remove from Compare"
+            update_btn.variable_name = "rm_btn"
+        else:
+            update_btn.text = "Add to Compare"
+            update_btn.variable_name = "add_btn"
+        layout = Layout(rows=[Row(components=[update_btn.id, clear_btn.id, show_btn.id])])
+    update_buttons(fig_exists)
+    if fig_exists and update_btn.value and update_btn.variable_name == "rm_btn":
+        # Remove the figure from the state list if it exists
+        state["list"] = [item for item in state["list"] if item.layout.title.text != figure1.layout.title.text]
+        fig_exists = False
+        # print("Calling from rm_btn")
+        update_buttons(fig_exists)  # Refresh buttons
+    elif not fig_exists and update_btn.value and update_btn.variable_name == "add_btn":
+        # Add the figure to the state list if it's not already present
+        if len(state["list"]) >= 2:
+            state["list"].pop(0)
+        fig_exists = any(item.layout.title.text == figure1.layout.title.text for item in state["list"])
+        if not fig_exists:
+            state["list"].append(figure1)
+        fig_exists = True
+        # print("Calling from add_btn")
+        update_buttons(fig_exists)  # Refresh buttons
+    
+    # Clear all items in the comparison list
+    if clear_btn.value:
+        state["list"] = []
+        fig_exists = False
+        # print("Calling from clear_btn")
+        update_buttons(fig_exists)
+    
+    # Show the comparison if there are items in the list
+    if show_btn.value:
+        if len(state["list"]) > 0:
+            PlotlyComponent.from_figure(id='Comparison 1', figure=state["list"][0])
+        if len(state["list"]) > 1:
+            PlotlyComponent.from_figure(id='Comparison 2', figure=state["list"][1])
+    else:
+        PlotlyComponent.from_figure(id='plotly', figure=figure1)
+    
+    # # Print the state for debugging purposes
+    # print('Stateful List len', len(state["list"]))
+    if len(state["list"]) > 0:
+        print("Items for Comparison (Only 2 Allowed)")
+        for item in state["list"]:
+            print(item.layout.title.text)"""
+
+[cells.e8e00772-60e0-4044-b9f2-d25a3cad7cd1]
+cellName = ""
+cellType = "markdown"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+## Part 2: Movie Actor Analysis
+* Analysing the genres of the Actors in the movie:
+  - Select the Country with Show Type Movie
+  - Select the Actor/Actress who is casted in the movies of the selected Country
+  - Display the total movies and the Genre Distribution of the movies where the actor has played a role."""
+
+[cells.52b2a99d-82e9-4f89-a891-de0458da7b3b]
+cellName = ""
+cellType = "sql"
+hideCell = "True"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+Select * from netflix_data where "cast" is NOT NULL and type =='Movie';"""
+
+[cells.a2840e50-7455-4b5d-a428-0852213391f9]
+cellName = ""
+cellType = "code"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+distinct_countries_query = '''
+WITH split_countries AS (
+    SELECT DISTINCT TRIM(UNNEST(REGEXP_SPLIT_TO_ARRAY(country, ','))) AS country, type
+    FROM netflix_data
+)
+SELECT DISTINCT country
+FROM split_countries
+WHERE country IS NOT NULL AND country <> ''
+AND type == 'Movie'
+ORDER BY country;
+'''
+
+# Execute the query and fetch the distinct countries
+distinct_countries = conn.execute(distinct_countries_query).fetchall()
+
+# Convert the result to a list
+country_list = [row[0] for row in distinct_countries]
+# print(len(country_list))
+country_for_movie = zt.Autocomplete(id = 'country_for_movie', items = country_list, label = 'Select Country')"""
+
+[cells.8d46daaf-33ab-40cb-b5b6-fb0bcef303c9]
+cellName = ""
+cellType = "code"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+selected_country_for_movie = country_for_movie.value
+distinct_actors_query = f'''
+    WITH split_actors AS (
+        SELECT TRIM(UNNEST(REGEXP_SPLIT_TO_ARRAY("cast", ','))) AS actor
+        FROM netflix_data 
+        WHERE type =='Movie'
+    )
+    SELECT DISTINCT actor
+    FROM split_actors
+    WHERE actor IS NOT NULL AND actor <> ''
+    ORDER BY actor;
+    '''
+if selected_country_for_movie and len(selected_country_for_movie)>0:
+    distinct_actors_query = f'''
+    WITH split_actors AS (
+        SELECT TRIM(UNNEST(REGEXP_SPLIT_TO_ARRAY("cast", ','))) AS actor
+        FROM netflix_data 
+        WHERE country LIKE '%{selected_country_for_movie}%' 
+        AND type =='Movie'
+    )
+    SELECT DISTINCT actor
+    FROM split_actors
+    WHERE actor IS NOT NULL AND actor <> ''
+    ORDER BY actor;
+    '''
+
+# Execute the query and fetch the distinct actors
+distinct_actors = conn.execute(distinct_actors_query).fetchall()
+
+# Convert the result to a list
+actor_list = [row[0] for row in distinct_actors]
+
+# print("Distinct Actors:", actor_list)
+actor_for_movie = zt.Autocomplete(id = 'actor_for_movie', items = actor_list, label = 'Select Actor/Actress')"""
+
+[cells.3a8e9a50-c94f-4ebb-a05c-4a66d74185f2]
+cellName = ""
+cellType = "code"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+selected_actor_for_movie = actor_for_movie.value
+
+if not(selected_actor_for_movie and len(selected_actor_for_movie)):
+    print("Please select an Actor/Actress")
+else:
+    distinct_genre_query = f'''
+    WITH split_genre AS (
+        SELECT TRIM(UNNEST(REGEXP_SPLIT_TO_ARRAY(listed_in, ','))) AS listed_in, release_year
+        FROM netflix_data 
+        WHERE "cast" LIKE '%{selected_actor_for_movie}%'
+        AND type =='Movie'
+    )
+    SELECT listed_in, count(*) as listed_count
+    FROM split_genre
+    WHERE listed_in IS NOT NULL AND listed_in <> ''
+    Group by listed_in
+    ORDER BY listed_in;
+    '''
+    actor_movie_count_query= f'''
+    SELECT COUNT(*) AS movie_count
+    FROM netflix_data 
+    WHERE "cast" LIKE '%{selected_actor_for_movie}%'
+    AND type =='Movie'
+    '''
+    if selected_country_for_movie and len(selected_country_for_movie)>0:
+        distinct_genre_query = f'''
+        WITH split_genre AS (
+            SELECT TRIM(UNNEST(REGEXP_SPLIT_TO_ARRAY(listed_in, ','))) AS listed_in, release_year
+            FROM netflix_data 
+            WHERE country LIKE '%{selected_country_for_movie}%' 
+            AND "cast" LIKE '%{selected_actor_for_movie}%'
+            AND type =='Movie'
+        )
+        SELECT listed_in, count(*) as listed_count
+        FROM split_genre
+        WHERE listed_in IS NOT NULL AND listed_in <> ''
+        Group by listed_in
+        ORDER BY listed_in;
+        '''
+        actor_movie_count_query= f'''
+        SELECT COUNT(*) AS movie_count
+        FROM netflix_data 
+        WHERE country LIKE '%{selected_country_for_movie}%' 
+        AND "cast" LIKE '%{selected_actor_for_movie}%'
+        AND type =='Movie'
+        '''
+    
+    # Execute the query and fetch the distinct actors
+    distinct_genre = conn.execute(distinct_genre_query).fetchall()
+    # print(distinct_genre)
+    actor_movie_count = conn.execute(actor_movie_count_query).fetchall()
+    # print(actor_movie_count[0][0])
+    
+    import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
+    
+    
+    # Unpacking the data
+    genres, counts = zip(*distinct_genre)
+    
+    # Create a subplot figure with 2 rows and 1 column
+    pie_figure = make_subplots(
+        rows=2, cols=1,
+        row_heights=[0.2, 0.8],
+        vertical_spacing=0.1,
+        specs=[[{"type": "indicator"}], [{"type": "pie"}]]
+    )
+    
+    # Add the number plot for total movies
+    pie_figure.add_trace(go.Indicator(
+        mode="number",
+        value=actor_movie_count[0][0],
+        title={"text": "Total Movies"},
+        domain={'x': [0, 1], 'y': [0, 1]}
+    ), row=1, col=1)
+    
+    # Add the pie chart for genre distribution
+    pie_figure.add_trace(go.Pie(
+        labels=genres,
+        values=counts,
+        name=''
+    ), row=2, col=1)
+    
+    title=f'Movie Participation in Different Genre'
+    if selected_actor_for_movie and len(selected_actor_for_movie)>0:
+        title+= f' for actor/actress {selected_actor_for_movie}'
+    if selected_country_for_movie and len(selected_country_for_movie)>0:
+        title+= f' in {selected_country_for_movie}'
+    
+    
+    # Customize the layout
+    pie_figure.update_layout(
+        title= title
+    )
+
+    PlotlyComponent.from_figure(id='actor_genre_distribution', figure=pie_figure)"""
+
