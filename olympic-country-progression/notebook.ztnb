@@ -1,0 +1,83 @@
+notebookId = "0c1ce90c-e5c9-492d-972c-30756bae297e"
+notebookName = "Olympics Medal Country Progression"
+
+[cells.42d63c07-91ec-408c-8c4b-830d6a570ad6]
+cellName = "Create Filtered Olympics Table"
+cellType = "sql"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+CREATE OR REPLACE TABLE olympics_filtered AS
+SELECT 
+    r.discipline_title,
+    r.event_title,
+    r.slug_game,
+    h.game_season, -- Add game_season from olympic_hosts.csv
+    r.participant_type,
+    r.medal_type,
+    r.athletes,
+    r.rank_equal,
+    r.rank_position,
+    r.country_name,
+    r.country_code,
+    r.country_3_letter_code,
+    r.athlete_url,
+    r.athlete_full_name,
+    r.value_unit,
+    r.value_type,
+    h.game_year  as event_year -- Convert date field if needed
+FROM 
+    'olympic_results.csv' r
+JOIN 
+    'olympic_hosts.csv' h
+ON 
+    r.slug_game = h.game_slug
+WHERE 
+    r.event_title IS NOT NULL 
+    AND r.event_title != '' 
+    AND r.discipline_title IS NOT NULL
+    AND r.rank_position IS NOT NULL;
+"""
+
+[cells.b531bbfa-96ec-4cde-b6eb-43b8baa7699b]
+cellName = "Replace Kyrgystan Country Name"
+cellType = "sql"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+UPDATE olympics_filtered
+SET country_name = 'Kyrgyz Republic'
+WHERE country_name =  'Kyrgyzstan';"""
+
+[cells.b4de4e54-7c71-4d71-b3a2-dff3c7af434e]
+cellName = "Replace Russia Country Name"
+cellType = "sql"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+UPDATE olympics_filtered
+SET country_name = 'Russia'
+WHERE country_name IN ('Olympic Athletes from Russia', 'Russian Federation');"""
+
+[cells.956b4977-86aa-4cdf-bb99-ea90da8d5a1a]
+cellName = "Replace China Country Name"
+cellType = "sql"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+UPDATE olympics_filtered
+SET country_name = 'China'
+WHERE country_name IN ('ROC', 'People''s Republic of China');"""
+

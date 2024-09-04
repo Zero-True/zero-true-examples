@@ -1,0 +1,189 @@
+notebookId = "5bfab266-5422-44c7-88fb-ccfb17e21f85"
+notebookName = "Zero True"
+
+[cells.cc798104-10de-4eb7-9a64-a2b430656e3e]
+cellName = ""
+cellType = "code"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+import requests
+import os
+import pandas as pd 
+
+# URL for IMDb data
+imdb_url = "https://datasets.imdbws.com/"
+
+# Folder to save IMDb files
+folder_name = "../imdbfiles"
+
+imdb_files = ["name.basics.tsv.gz",
+    "title.akas.tsv.gz",
+    "title.basics.tsv.gz",
+    "title.crew.tsv.gz",
+    "title.episode.tsv.gz",
+    "title.principals.tsv.gz",
+    "title.ratings.tsv.gz"]
+
+
+# Create the folder if it doesn't exist
+# MANUALLY TOGGLE THE and Download variable to download. 
+download = False
+if not os.path.exists(folder_name) and download:
+    os.makedirs(folder_name)
+
+    # List of IMDb files to download
+
+    for file_name in imdb_files:
+        file_url = imdb_url + file_name
+        file_path = os.path.join(folder_name, file_name)
+    
+        print(f"Downloading {file_name}...")
+        
+        # Download the file
+        response = requests.get(file_url)
+        
+        # Save the file
+        with open(file_path, 'wb') as f:
+            f.write(response.content)
+    
+        print(f"{file_name} downloaded successfully!")
+
+        print("All IMDb files downloaded and saved in the 'imdbfiles' folder.")
+"""
+
+[cells.a9b270bb-555b-4e67-9bc9-7b1141431ca4]
+cellName = ""
+cellType = "sql"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+variable_name = "top_shows"
+code = """
+-- CREATE TABLE IF NOT EXISTS top_shows_tbl AS SELECT 
+--  title.titleID,
+--  title.title,
+--  basics.titleType as type,
+--  basics.startYear as startYear,
+--  CAST(rate.numVotes as INTEGER) as votes
+-- FROM read_csv('../imdbfiles/title.akas.tsv.gz', delim='	', quote='', all_varchar=true, header=true, AUTO_DETECT=TRUE) title
+-- left join read_csv('../imdbfiles/title.basics.tsv.gz', delim='	', quote='', all_varchar=true, header=true, AUTO_DETECT=TRUE) basics
+-- on title.titleid = basics.tconst
+-- left join read_csv('../imdbfiles/title.ratings.tsv.gz', delim='	', quote='', all_varchar=true, header=true, AUTO_DETECT=TRUE) rate
+-- on title.titleid = rate.tconst
+-- WHERE title.isOriginalTitle = '1' AND type = 'tvSeries' ORDER BY votes DESC LIMIT 500;
+
+
+SELECT * FROM top_shows_tbl"""
+
+[cells.3c9a9ac2-1c1b-4cbb-b93e-684711eb09d2]
+cellName = ""
+cellType = "code"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+import zero_true as zt
+top_shows['title_year'] = top_shows['title'] + ' (' + top_shows['startYear'] + ')'
+selected_show = zt.Autocomplete(id='show',items=top_shows['title_year'])
+if selected_show.value != None:
+  try:
+    show_id = top_shows[top_shows['title_year']==selected_show.value]["titleId"].values[0]
+  except:
+    show_id = 'tt0903747'
+else:
+  show_id = 'tt0903747'
+"""
+
+[cells.6c756a12-2cfe-4da2-8fe8-a2ab5ef14e9a]
+cellName = ""
+cellType = "sql"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+variable_name = "ratings_df"
+code = """
+-- CREATE TABLE IF NOT EXISTS ratings_tbl AS
+-- SELECT 
+--  title.title, 
+--  title.titleId,
+--  top.votes,
+--  TRY_CAST(ep.seasonNumber AS INTEGER) as season, 
+--  TRY_CAST(ep.episodeNumber AS INTEGER) as episode, 
+--  TRY_CAST(rate.averageRating AS FLOAT) as rating
+-- FROM read_csv('../imdbfiles/title.episode.tsv.gz', delim='	', quote='', all_varchar=true, header=true, AUTO_DETECT=TRUE) ep
+-- left join read_csv('../imdbfiles/title.akas.tsv.gz', delim='	', quote='', all_varchar=true, header=true, AUTO_DETECT=TRUE) title
+-- on ep.parentTconst = title.titleid
+--  left join read_csv('../imdbfiles/title.ratings.tsv.gz', delim='	', quote='', all_varchar=true, header=true, AUTO_DETECT=TRUE) rate
+--  on ep.tconst = rate.tconst
+-- inner join top_shows_tbl top ON title.titleId = top.titleId
+-- WHERE title.isOriginalTitle = '1'  ORDER BY season, episode;
+
+SELECT * FROM ratings_tbl 
+WHERE titleId = {show_id}"""
+
+[cells.d357ea16-d749-4077-be55-905985595a9a]
+cellName = ""
+cellType = "code"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+import plotly.express as px
+import plotly.graph_objects as go
+import numpy as np
+ratings_df = ratings_df.dropna()
+ratings_df['Season and Episode'] = 'S' +ratings_df['season'].astype(str)+ ' Ep' +ratings_df['episode'].astype(str)
+fig = go.Figure(go.Scatter(
+                x = ratings_df.index,
+                y=ratings_df.rating, 
+                customdata=np.stack(([ratings_df['Season and Episode'],ratings_df['rating']]),axis=-1),
+                hovertemplate='<br>'.join([
+                              "%{customdata[0]}",
+                              "Rating: %{customdata[1]}"])))
+seasons = ratings_df['season'].unique()
+season_index = [ratings_df.index[ratings_df['season']==season][0] for season in seasons]
+title = ratings_df['title'].values[0]
+# fig.update_traces(
+#   hovertemplate='<br>'.join([
+#     "%{customdata[0]}",
+#     "Rating: %{customdata[1]}"
+#   ])
+# )
+fig.update_layout(title=f'{title} IMDB Ratings', xaxis_title='Episodes',yaxis_title='Rating')
+fig.update_layout(xaxis = dict(tickmode='array',tickvals = season_index,ticktext=ratings_df['Season and Episode'].iloc[season_index].tolist()))
+fig.update_traces(mode='markers+lines', name='')
+plt = zt.PlotlyComponent.from_figure(figure=fig, id = 'plot')"""
+
+[cells.b2b6baf0-0c0f-4a64-aea0-a2e55d88b95c]
+cellName = ""
+cellType = "code"
+hideCell = "False"
+hideCode = "False"
+expandCode = "False"
+showTable = "False"
+nonReactive = "False"
+code = """
+#Notable Episodes
+#Print out table of n highest rated episodes (user specifies n)
+zt.Text(id='question',text=f'Want to binge the best episodes of {title}? Pick how many episodes you want to binge',type='text-body-1')
+num_episodes_slider = zt.Slider(id = 'num_episodes',
+                                     min = 1,
+                                     max = min(50,len(ratings_df)),
+                                     step = 1, label = 'Number of Episodes',
+                                     thumb_label=True)
+zt.DataFrame.from_dataframe(id='ep_list',df=ratings_df.sort_values(by=['rating'],ascending=False,ignore_index=True)[['Season and Episode','rating']].head(n=num_episodes_slider.value))
+# print(ratings_df.sort_values(by=['rating'],ascending=False,ignore_index=True)[['Season and Episode','rating']].head(n=num_episodes_slider.value))
+"""
+
